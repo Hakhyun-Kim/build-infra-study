@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-19T09:12:27+00:00",
+  "generated_at": "2026-08-19T09:30:02+00:00",
   "host": {
     "system": "Linux",
     "release": "6.18.33.2-microsoft-standard-WSL2",
@@ -10,13 +10,13 @@
     {
       "experiment": "exp01_bazel_hello",
       "status": "PASS",
-      "seconds": 1.3,
+      "seconds": 1.1,
       "detail": ""
     },
     {
       "experiment": "exp02_remote_cache",
       "status": "PASS",
-      "seconds": 22.9,
+      "seconds": 20.1,
       "detail": ""
     },
     {
@@ -34,7 +34,7 @@
     {
       "experiment": "exp05_test_impact",
       "status": "PASS",
-      "seconds": 0.8,
+      "seconds": 0.7,
       "detail": ""
     },
     {

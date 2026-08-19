@@ -13,12 +13,12 @@
 | 용어 | 한 줄 정의 | 확인한 곳 |
 |---|---|---|
 | host / exec / target platform (3종 구분) | host=Bazel이 도는 곳, exec=컴파일러가 도는 곳, target=산출물이 돌 곳. `toolchain` 규칙의 exec/target_compatible_with 가 이것 | exp03 |
-| sysroot | | |
+| sysroot | 타깃용 헤더·라이브러리 트리. **배포판 크로스 패키지를 그대로 sysroot로 쓰면 깨진다** — 링커 스크립트가 `/` 기준 절대 경로를 담고 있어서 | exp03 B |
 | triple (`aarch64-linux-gnu`) | arch-os-abi. 크로스 툴 이름의 접두사이자 sysroot 경로의 키 | exp03 |
 | ABI, soft/hard float | | |
 | QEMU user mode vs system mode | | |
 | binfmt_misc | 커널이 외부 아키텍처 바이너리를 보면 자동으로 에뮬레이터로 넘기는 등록 기구 | exp04 예정 |
-| Yocto SDK / `populate_sdk` | | |
+| Yocto SDK / `populate_sdk` | 경로가 자기 완결적인 sysroot + 툴체인을 뽑아준다. hermetic 크로스 빌드의 현실적 공급원 | exp06 예정 |
 | BSP, machine, layer | | |
 | device tree | | |
 
@@ -63,6 +63,10 @@ CMake의 툴체인 파일이 이 셋을 뭉뚱그리는 것과 대비된다.
    오므로 호스트와 타깃이 같은 `bazel-out/k8-fastbuild/`를 놓고 싸운다.
    `--experimental_platform_in_output_dir`로 해결.
 3. **`bazel-out`은 심볼릭 링크다.** `rm -rf`로는 안 지워진다. `bazel clean`을 쓸 것.
+4. **hermetic 은 한 번에 달성되지 않는다.** 컴파일러를 고정하면 그 컴파일러가 쓰는
+   공유 라이브러리가, 그걸 컨테이너로 덮으면 타깃 libc·CRT가, 그다음엔 sysroot의
+   절대 경로가 드러난다. 층마다 하나씩 걷어내야 하고, 어디까지 걷어낼지가 곧
+   비용 대비 판단이다. (exp03 B → exp07 → exp06)
 
 ## 참고
 
