@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-08-19T09:12:27+00:00",
+  "host": {
+    "system": "Linux",
+    "release": "6.18.33.2-microsoft-standard-WSL2",
+    "machine": "x86_64",
+    "cpu_count": 8
+  },
+  "results": [
+    {
+      "experiment": "exp01_bazel_hello",
+      "status": "PASS",
+      "seconds": 1.3,
+      "detail": ""
+    },
+    {
+      "experiment": "exp02_remote_cache",
+      "status": "PASS",
+      "seconds": 22.9,
+      "detail": ""
+    },
+    {
+      "experiment": "exp03_cross_aarch64",
+      "status": "PASS",
+      "seconds": 1.1,
+      "detail": ""
+    },
+    {
+      "experiment": "exp04_qemu_device",
+      "status": "NO_CHECK",
+      "seconds": 0.0,
+      "detail": "check.sh not written yet"
+    },
+    {
+      "experiment": "exp05_test_impact",
+      "status": "PASS",
+      "seconds": 0.8,
+      "detail": ""
+    },
+    {
+      "experiment": "exp06_yocto_qemuarm64",
+      "status": "NO_CHECK",
+      "seconds": 0.0,
+      "detail": "check.sh not written yet"
+    },
+    {
+      "experiment": "exp07_ci_pipeline",
+      "status": "NO_CHECK",
+      "seconds": 0.0,
+      "detail": "check.sh not written yet"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+load(":cc_toolchain_config.bzl", "cc_toolchain_config")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(name = "empty")
+
+cc_toolchain_config(name = "aarch64_config")
+
+cc_toolchain(
+    name = "aarch64_cc_toolchain",
+    all_files = ":empty",
+    ar_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = 0,
+    toolchain_config = ":aarch64_config",
+)
+
+# toolchain resolution 이 이 규칙을 본다.
+#   exec_compatible_with  = 컴파일러가 '어디서 돌 수 있는가'
+#   target_compatible_with = 산출물이 '어디서 돌 것인가'
+toolchain(
+    name = "cc_toolchain_aarch64",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:linux",
+    ],
+    toolchain = ":aarch64_cc_toolchain",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)

@@ -1,0 +1,25 @@
+# Bazel 7 에서는 cc_* 규칙이 네이티브라 load 없이 쓸 수 있다.
+# Bazel 8 이상으로 올릴 때는 아래 load 가 필요할 수 있다 (버전 올릴 때 확인할 것):
+#   load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+cc_library(
+    name = "greeter",
+    srcs = ["greeter.cc"],
+    hdrs = ["greeter.h"],
+    # exp05(변경 영향 분석)에서 다른 패키지가 이 타깃에 의존하게 만들 것이므로 공개한다.
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "hello",
+    srcs = ["main.cc"],
+    visibility = ["//visibility:public"],
+    deps = [":greeter"],
+)
+
+cc_test(
+    name = "greeter_test",
+    size = "small",  # 크기 선언은 팜에서 타임아웃/스케줄링의 근거가 된다
+    srcs = ["greeter_test.cc"],
+    deps = [":greeter"],
+)

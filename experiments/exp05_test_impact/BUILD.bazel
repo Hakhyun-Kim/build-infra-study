@@ -1,0 +1,29 @@
+cc_library(
+    name = "formatter",
+    srcs = ["formatter.cc"],
+    hdrs = ["formatter.h"],
+    visibility = ["//visibility:public"],
+    # 이 엣지가 exp05 의 전부다. greeter 를 고치면 여기까지 전파되어야 한다.
+    deps = [
+        ":arch_note",
+        "//experiments/exp01_bazel_hello:greeter",
+    ],
+)
+
+# select() 분기. query 는 configuration 을 모르므로 두 갈래를 모두 의존으로 본다.
+# cquery 는 실제로 선택된 쪽만 본다. 이 차이가 변경 영향 분석의 정확도를 가른다.
+cc_library(
+    name = "arch_note",
+    hdrs = ["arch_note.h"],
+    srcs = select({
+        "@platforms//cpu:aarch64": ["arch_note_aarch64.cc"],
+        "//conditions:default": ["arch_note_x86.cc"],
+    }),
+)
+
+cc_test(
+    name = "formatter_test",
+    size = "small",
+    srcs = ["formatter_test.cc"],
+    deps = [":formatter"],
+)

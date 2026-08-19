@@ -1,0 +1,35 @@
+# bzlmod (Bazel 모듈 시스템). 의존성이 생기면 여기에 bazel_dep 로 추가한다.
+# exp01 은 외부 의존성 없이 돌아가는 것이 목적이라 의도적으로 비어 있다.
+module(
+    name = "build_infra_study",
+    version = "0.1.0",
+)
+
+# exp03: aarch64 크로스 툴체인 등록.
+# 호스트(x86_64) 빌드에는 영향이 없다 - target_compatible_with 가 안 맞으면
+# resolution 단계에서 그냥 후보에서 빠진다.
+register_toolchains("//toolchains/aarch64:cc_toolchain_aarch64")
+
+# exp03 B 경로: hermetic 컴파일러.
+# LLVM 툴체인을 Bazel 이 직접 내려받아 고정한다 -> 호스트에 어떤 컴파일러가
+# 깔려 있든 같은 컴파일러로 빌드된다.
+#
+# 다만 sysroot 는 아직 호스트의 것(/usr/aarch64-linux-gnu)을 쓴다.
+# 즉 '컴파일러는 hermetic, sysroot 는 아니다'. 완전 hermetic 은 sysroot 도
+# 내려받아야 하고 그건 exp06(Yocto SDK)과 이어진다.
+#
+# 일부러 register_toolchains 하지 않는다. 전역 등록하면 exp01~05 의 결과가
+# 바뀌므로, 이 툴체인은 --extra_toolchains 로 명시할 때만 쓴다.
+bazel_dep(name = "toolchains_llvm", version = "1.8.0")
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    name = "llvm_toolchain",
+    llvm_version = "20.1.4",
+)
+llvm.sysroot(
+    name = "llvm_toolchain",
+    targets = ["linux-aarch64"],
+    path = "/usr/aarch64-linux-gnu",
+)
+use_repo(llvm, "llvm_toolchain")

@@ -1,0 +1,17 @@
+# 실패한 테스트의 출력만 보여준다
+test --test_output=errors
+
+# 액션 환경을 엄격하게 고정한다.
+# 호스트의 환경변수가 빌드 액션으로 새어 들어가면 "내 머신에서만 되는" 빌드가 된다.
+# hermetic 빌드의 출발점이라 처음부터 켜둔다.
+build --incompatible_strict_action_env
+
+# exp02 에서 켠다 (캐시 있음/없음 비교가 목적이라 기본값은 꺼둔 상태)
+# build --disk_cache=.bazel-cache
+
+# --platforms 만 바꾸면 출력 디렉터리 이름이 안 바뀐다.
+# 디렉터리 이름은 레거시 --cpu 값(기본 k8)에서 오기 때문에, 호스트 빌드와
+# aarch64 빌드가 둘 다 bazel-out/k8-fastbuild/ 로 들어가 서로를 덮어쓴다.
+# 액션 캐시는 키가 달라 양쪽 다 살아 있지만, 출력 트리는 매번 다시 깔린다.
+# exp03 에서 실측으로 확인. (실험적 플래그라 Bazel 버전 올릴 때 확인할 것)
+build --experimental_platform_in_output_dir

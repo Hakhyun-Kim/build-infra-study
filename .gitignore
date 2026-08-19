@@ -1,0 +1,23 @@
+# Bazel
+/bazel-*
+.bazel-cache/
+
+# Yocto (빌드 산출물이 수십 GB — 절대 커밋하지 않는다)
+/experiments/exp06_yocto_qemuarm64/poky/
+/experiments/exp06_yocto_qemuarm64/build/
+/experiments/exp06_yocto_qemuarm64/downloads/
+/experiments/exp06_yocto_qemuarm64/sstate-cache/
+
+# 타깃 이미지 / 루트파일시스템
+*.wic
+*.wic.bz2
+*.rootfs.ext4
+*.qcow2
+*.img
+
+# 로컬 실행 산출물
+/tmp/
+*.log
+
+# exp02 생성 워크로드 (gen_workload.py 로 재생성)
+/experiments/exp02_remote_cache/workload/

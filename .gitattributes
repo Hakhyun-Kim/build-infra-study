@@ -1,0 +1,7 @@
+# 이 저장소는 리눅스에서 실행된다. 셸 스크립트에 CRLF 가 들어가면
+# 'bash: \r: command not found' 로 깨지므로 작업 트리까지 LF 로 고정한다.
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.bazel text eol=lf
+*.bazelrc text eol=lf
