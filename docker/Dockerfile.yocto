@@ -1,0 +1,23 @@
+# Yocto 빌드 환경.
+#
+# 우분투 26.04 호스트에서 직접 돌리지 않는 이유: Yocto 는 검증된 호스트 배포판
+# 목록(SANITY_TESTED_DISTROS)을 갖고 있고 26.04 는 거기 없다. exp03 B 에서
+# 배운 것과 같은 이야기 - 도구를 고정해도 도구가 도는 바닥을 고정하지 않으면
+# 호스트를 탄다. 22.04 는 scarthgap(5.0 LTS)이 검증한 호스트다.
+FROM build-infra:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Yocto 5.0 매뉴얼의 우분투 호스트 패키지 목록.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      gawk wget git diffstat unzip texinfo gcc build-essential chrpath socat \
+      cpio python3 python3-pip python3-pexpect xz-utils debianutils \
+      iputils-ping python3-git python3-jinja2 python3-subunit \
+      zstd liblz4-tool file locales libacl1 bzip2 lz4 \
+ && rm -rf /var/lib/apt/lists/*
+
+# BitBake 는 UTF-8 로케일을 요구한다.
+RUN sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+WORKDIR /yocto

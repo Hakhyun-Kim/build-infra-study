@@ -13,27 +13,65 @@ Bazel이 "애플리케이션을 어떻게 빌드하는가"라면 Yocto는 "그 �
 
 ## 방법
 
+> ⏱️ **첫 빌드는 몇 시간, 디스크 수십 GB를 쓴다.** 백그라운드로 돌리고 다른 일을 할 것.
+> 노트북 배터리로 하지 말 것.
+
+### 컨테이너 안에서 돌린다
+
+Yocto는 **검증된 호스트 배포판 목록**(`SANITY_TESTED_DISTROS`)을 갖고 있고,
+최신 우분투는 대개 거기에 없다. exp03 B에서 배운 것과 같은 이야기 —
+도구를 고정해도 도구가 도는 바닥을 고정하지 않으면 호스트를 탄다.
+`docker/Dockerfile.yocto`가 22.04 기반으로 Yocto 호스트 패키지와 UTF-8 로케일을 넣는다.
+
 ```bash
-sudo apt install -y gawk wget git diffstat unzip texinfo gcc build-essential \
-  chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils \
-  iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev \
-  python3-subunit zstd liblz4-tool file locales
-
-git clone -b scarthgap git://git.yoctoproject.org/poky
-cd poky && source oe-init-build-env
-
-# conf/local.conf 에서 MACHINE ?= "qemuarm64"
-bitbake core-image-minimal
-runqemu qemuarm64 nographic
+docker build -t build-infra:yocto -f docker/Dockerfile.yocto docker/
 ```
 
-내 바이너리 넣기 — 레시피를 하나 쓴다:
+### 소스와 빌드 디렉터리는 저장소 밖에
+
+산출물이 수십 GB라 저장소 안에 두지 않는다.
+
+```bash
+mkdir -p ~/yocto && cd ~/yocto
+git clone -b scarthgap --depth 1 https://git.yoctoproject.org/poky
+```
+
+`scarthgap`(5.0 LTS)을 쓴다. LTS라 재현성이 좋고 22.04 호스트에서 검증돼 있다.
+
+### 설정
+
+`oe-init-build-env`로 빌드 디렉터리를 만든 뒤 `conf/local.conf`에 붙인다:
 
 ```
-recipes-example/hello/hello_0.1.bb
-  -> Bazel 산출물을 가져오거나, 소스를 직접 빌드하도록 작성
-  -> IMAGE_INSTALL:append = " hello" 로 이미지에 포함
+MACHINE ?= "qemuarm64"
+
+# 빌드 디렉터리 밖에 둔다. 이 둘을 팀이 공유하느냐가
+# Yocto 빌드 시간을 시간 단위에서 분 단위로 바꾼다.
+DL_DIR ?= "/yocto/downloads"
+SSTATE_DIR ?= "/yocto/sstate-cache"
+
+# 15GB RAM / 8코어. 기본값(=nproc)은 메모리 스파이크가 커서 낮췄다.
+BB_NUMBER_THREADS ?= "6"
+PARALLEL_MAKE ?= "-j 6"
 ```
+
+`MACHINE ??= "qemux86-64"`가 이미 있지만 `?=`가 `??=`보다 우선하므로 qemuarm64가 이긴다.
+
+### 실행
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/yocto -e USER=builder   -v "$HOME/yocto":/yocto build-infra:yocto   bash -lc "cd /yocto/poky && source oe-init-build-env /yocto/build && bitbake core-image-minimal"
+```
+
+### 그다음: SDK 뽑기 (exp03 B 의 해답)
+
+```bash
+bitbake -c populate_sdk core-image-minimal
+```
+
+크로스 툴체인 + **경로가 자기 완결적인 sysroot**를 한 덩어리로 뽑아준다.
+배포판 크로스 패키지를 sysroot로 쓰려다 링커 스크립트의 절대 경로에 막혔던
+[exp03 B](../exp03_cross_aarch64/README.md)의 해결 경로가 이것이다.
 
 ## 합격 기준
 
@@ -65,4 +103,9 @@ recipes-example/hello/hello_0.1.bb
 
 ## 결과
 
-미실행.
+**진행 중 (2026-08-19 시작)** — `core-image-minimal` 첫 빌드 실행 중.
+
+곁가지로, bitbake가 WSLv2를 감지하고 경고를 냈다:
+`You are running bitbake under WSLv2 ... you should optimize your VHDX file
+eventually to avoid running out of storage space`.
+빌드 산출물이 VHDX를 부풀리고, 파일을 지워도 VHDX는 자동으로 줄지 않는다.
