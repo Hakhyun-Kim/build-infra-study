@@ -58,10 +58,10 @@ bash scripts/bootstrap_ubuntu.sh   # bazelisk, qemu, 빌드 도구 설치
 |---|---|---|---|
 | [01](experiments/exp01_bazel_hello/) | `bazel_hello` | 최소 C++ 타깃을 Bazel로 빌드·테스트하고, 액션 그래프를 눈으로 확인할 수 있는가 | ✅ **통과** (2026-08-18) |
 | [02](experiments/exp02_remote_cache/) | `remote_cache` | 캐시가 있을 때와 없을 때 클린 빌드 시간이 얼마나 갈리는가. 캐시 히트는 무엇을 키로 삼는가 | 🟡 **부분 통과** (disk cache 28.9x / remote 보류) |
-| [03](experiments/exp03_cross_aarch64/) | `cross_aarch64` | 같은 소스를 `--platforms`만 바꿔 aarch64로 빌드할 수 있는가 | 🟡 **부분 통과** (시스템 툴체인 O, hermetic 미완) |
+| [03](experiments/exp03_cross_aarch64/) | `cross_aarch64` | 같은 소스를 `--platforms`만 바꿔 aarch64로 빌드할 수 있는가 | ✅ **통과** (시스템 툴체인 + Yocto SDK hermetic 경로) |
 | [04](experiments/exp04_qemu_device/) | `qemu_device` | 크로스 빌드한 바이너리를 QEMU 타깃에서 실행하고 결과를 수집할 수 있는가 | 미실행 |
 | [05](experiments/exp05_test_impact/) | `test_impact` | `bazel query`로 "이 커밋이 영향을 주는 테스트만" 골라낼 수 있는가 | ✅ **통과** (2026-08-18) |
-| [06](experiments/exp06_yocto_qemuarm64/) | `yocto_qemuarm64` | Yocto로 타깃 이미지를 빌드하고 그 위에서 내 바이너리를 돌릴 수 있는가 | 🟡 **부분 통과** (부팅 O, sstate 재빌드 8초 / SDK 진행 중) |
+| [06](experiments/exp06_yocto_qemuarm64/) | `yocto_qemuarm64` | Yocto로 타깃 이미지를 빌드하고 그 위에서 내 바이너리를 돌릴 수 있는가 | 🟡 **부분 통과** (부팅 O, sstate 8초, SDK O / 이미지 탑재 미완) |
 | [07](experiments/exp07_ci_pipeline/) | `ci_pipeline` | 위 전부를 GitLab CI 파이프라인 하나로 엮고, 계층별 소요 시간을 측정할 수 있는가 | 미실행 |
 
 결과 갱신:

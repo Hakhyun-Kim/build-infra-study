@@ -102,31 +102,5 @@ arch=aarch64
 
 ## 결과
 
-**A 경로 통과 (2026-08-18)** — 기준 1~3 충족. `bash check.sh`가 자동 검증한다.
-
-### B 경로 시도 결과 (2026-08-19) — hermetic 은 계속 뒤로 물러난다
-
-`toolchains_llvm 1.8.0` + LLVM 20.1.4로 **컴파일러를 다운로드·고정**하는 데까지는 갔다.
-`llvm.sysroot`가 절대 경로(`path`)를 받으므로 sysroot는 호스트 것을 썼다.
-
-층을 하나 고정할 때마다 **다음 호스트 의존성이 드러났다.** 순서대로:
-
-| # | 막힌 지점 | 원인 | 대응 |
-|---|---|---|---|
-| 1 | `#include <string>` not found | 크로스 libstdc++ 헤더 경로 미지정 | `-isystem` (나중에 4번으로 대체됨) |
-| 2 | `ld.lld: libxml2.so.2: cannot open` | **툴체인 바이너리 자신이 호스트 공유 라이브러리에 링크됨.** Ubuntu 26.04는 `libxml2.so.16`만 제공 | 컨테이너(22.04)로 실행 환경 고정 → **해결** |
-| 3 | `unable to find library -lgcc_s`, `crtendS.o` 없음 | 타깃용 libgcc·CRT 위치를 clang이 모름 | `--gcc-install-dir=` → 헤더 문제(1번)도 같이 해결 |
-| 4 | libc 링커 스크립트 파싱 실패 | `/usr/aarch64-linux-gnu/lib/libc.so`가 **`/` 기준 절대 경로**를 담은 GROUP 스크립트라, sysroot를 `/usr/aarch64-linux-gnu`로 잡으면 경로가 이중으로 붙는다 | **미해결** |
-
-> 🔑 **결론: 배포판의 크로스 패키지는 "sysroot로 쓰라고 만든 것"이 아니다.**
-> 그 안의 링커 스크립트가 루트(`/`) 기준 절대 경로를 담고 있어서, 통째로 sysroot로
-> 옮기면 깨진다. 진짜 hermetic 크로스 빌드에는 **경로가 자기 완결적인 sysroot**가
-> 필요하고, 그걸 만들어주는 것이 Yocto의 `populate_sdk`다 → **exp06으로 넘긴다.**
-
-그리고 2번이 이 실험의 핵심 교훈이다. **"hermetic 툴체인"조차 자기 자신은 hermetic하지
-않았다.** 툴체인 바이너리를 고정해도 그것이 도는 실행 환경까지 고정하지 않으면
-여전히 호스트를 탄다. 컨테이너가 그 층을 덮는다.
-
-**미완 (기준 4)****미완 (기준 4)**: 완전한 hermetic 경로. 지금 툴체인은 `/usr/bin/aarch64-linux-gnu-gcc`를
-**절대 경로로** 가리키므로, 이 패키지가 안 깔린 머신에서는 빌드가 실패한다.
-호스트 의존성을 없애려면 `toolchains_llvm` + sysroot 또는 Yocto SDK가 필요하다(exp06과 연결).
+**통과 (A 2026-08-18 / B 2026-08-21)** — 기준 1~3은 A 경로, 기준 4는 B 경로로 충족.
+`bash check.sh`는 A 경로를 자동 검증한다(B는 Yocto SDK 설치가 전제라 자동화에서 제외).

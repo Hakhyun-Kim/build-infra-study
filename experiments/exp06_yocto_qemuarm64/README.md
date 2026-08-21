@@ -115,6 +115,31 @@ qemuarm64 login:
 `runqemu qemuarm64 nographic slirp`로 로그인 프롬프트까지 도달했다(그 뒤 timeout으로 종료).
 `slirp`을 쓰면 tap 네트워크 설정에 root 권한이 필요 없다.
 
+### SDK (`populate_sdk`)
+
+| 항목 | 값 |
+|---|---|
+| 설치기 | 181MB (`poky-glibc-x86_64-...-cortexa57-qemuarm64-toolchain-5.0.19.sh`) |
+| 설치 후 | 1.3G |
+| 정적 libstdc++ 추가 후 재빌드 | **209초** (5367 태스크 중 5366 재실행 불필요) |
+
+**SDK 는 호스트 배포판이 무엇이든 동작한다.** 배포판 크로스 패키지가 실패했던 바로
+그 호스트에서 SDK 환경을 source 하고 컴파일하니 그대로 됐다:
+
+```
+$ . ~/yocto/sdk/environment-setup-cortexa57-poky-linux
+$ $CXX ... -o hello_sdk      ->  ELF ARM aarch64
+$ qemu-aarch64 -L <sysroot> hello_sdk sdk   ->  hello, sdk / arch=aarch64
+```
+
+이유는 `libc.so` 링커 스크립트 한 줄 차이다 — [exp03 B](../exp03_cross_aarch64/README.md) 참조.
+
+LLVM 툴체인이 `-l:libstdc++.a` 로 정적 링크를 시도하므로 SDK 에 정적판을 넣어야 했다:
+
+```
+TOOLCHAIN_TARGET_TASK:append = " libstdc++-staticdev"
+```
+
 ### 🔑 sstate 가 전부다
 
 **첫 빌드 몇 시간 → 재빌드 8초.** 이 격차가 Yocto 운영의 핵심이고,
@@ -136,15 +161,14 @@ Bazel 원격 캐시와 정확히 같은 이야기다(그쪽은 28.9배, 이쪽�
 
 ## 결과
 
-**기준 1·4 통과, 2·3 진행 중 (2026-08-21)**
+**기준 1·3·4 통과, 2 미완 (2026-08-21)**
 
 | 기준 | 상태 |
 |---|---|
 | 1. `runqemu`로 부팅되고 셸이 뜬다 | ✅ 로그인 프롬프트 도달 |
-| 2. 이미지 안에서 내 바이너리가 `arch=aarch64`를 출력 | ⏳ 레시피 작성 필요 |
-| 3. `populate_sdk` 로 뽑은 sysroot 로 크로스 빌드 | ⏳ SDK 빌드 중 |
+| 2. 이미지 안에서 내 바이너리가 `arch=aarch64` 출력 | ⏳ 레시피 미작성 |
+| 3. **`populate_sdk` sysroot 로 크로스 빌드** | ✅ **호스트·Bazel 양쪽에서 성공** |
 | 4. sstate 있는 재빌드 시간 비교 | ✅ **8초** |
 
-기준 3이 [exp03 B](../exp03_cross_aarch64/README.md)의 해결 경로다 —
-배포판 크로스 패키지는 링커 스크립트가 `/` 기준 절대 경로를 담고 있어
-sysroot 로 쓰면 깨졌다. Yocto SDK 는 재배치 가능하게 설계돼 있어 그 문제가 없다.
+기준 3이 [exp03 B](../exp03_cross_aarch64/README.md)를 닫았다 — Yocto SDK 의
+재배치 가능한 sysroot 가 배포판 크로스 패키지로는 불가능했던 크로스 빌드를 가능하게 했다.

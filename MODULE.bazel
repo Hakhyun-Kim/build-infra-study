@@ -27,9 +27,13 @@ llvm.toolchain(
     name = "llvm_toolchain",
     llvm_version = "20.1.4",
 )
+# sysroot 는 Yocto SDK 의 것을 쓴다(exp06).
+# 배포판 크로스 패키지를 sysroot 로 쓰면 그 안의 libc.so 링커 스크립트가
+# 호스트 루트 기준 절대 경로를 담고 있어서 깨진다. Yocto SDK 의 것은
+# sysroot 기준 상대 경로라 재배치가 된다.
 llvm.sysroot(
     name = "llvm_toolchain",
     targets = ["linux-aarch64"],
-    path = "/usr/aarch64-linux-gnu",
+    path = "/yocto/sdk/sysroots/cortexa57-poky-linux",
 )
 use_repo(llvm, "llvm_toolchain")
