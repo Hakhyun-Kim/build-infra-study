@@ -81,16 +81,49 @@ bitbake -c populate_sdk core-image-minimal
    그 sysroot로 exp03의 크로스 빌드가 된다 (Yocto ↔ Bazel 연결).
 4. sstate-cache를 지우지 않은 상태의 **재빌드 시간**을 첫 빌드와 비교 기록한다.
 
-## 관찰 (직접 채울 것)
+## 관찰 (2026-08-21 실측)
+
+환경: WSL2, 8코어 / 15GB RAM, `BB_NUMBER_THREADS=6`, `PARALLEL_MAKE=-j6`,
+빌드는 ubuntu:22.04 컨테이너 안. poky **scarthgap (5.0 LTS)**, `MACHINE=qemuarm64`.
 
 | 항목 | 값 |
 |---|---|
-| Poky 브랜치 / 릴리스 | |
-| 첫 `bitbake` 소요 시간 | |
-| 디스크 사용량 (`build/` 전체) | |
-| sstate 있는 상태의 재빌드 시간 | |
-| `downloads/` 크기 | |
-| 막혔던 지점 | |
+| 첫 `bitbake core-image-minimal` | **4073 태스크 전부 성공**, ERROR 0 / WARNING 33 |
+| **sstate 있는 상태의 재빌드** | **8초** (4073 태스크 전부 재실행 불필요) |
+| 디스크 — `build/` | 49G |
+| 디스크 — `downloads/` | 5.5G |
+| 디스크 — `sstate-cache/` | 3.8G |
+| 디스크 — `poky/` (소스) | 90M |
+
+산출물:
+
+```
+Image-qemuarm64.bin                          23MB   커널
+core-image-minimal-qemuarm64.rootfs.ext4     22MB   루트파일시스템
+...rootfs.tar.bz2                           5.6MB
+...rootfs.manifest                           908B   설치된 패키지 목록
+...rootfs.spdx.tar.zst                       120KB  SBOM
+```
+
+### 부팅 확인
+
+```
+Poky (Yocto Project Reference Distro) 5.0.19 qemuarm64 /dev/ttyAMA0
+qemuarm64 login:
+```
+
+`runqemu qemuarm64 nographic slirp`로 로그인 프롬프트까지 도달했다(그 뒤 timeout으로 종료).
+`slirp`을 쓰면 tap 네트워크 설정에 root 권한이 필요 없다.
+
+### 🔑 sstate 가 전부다
+
+**첫 빌드 몇 시간 → 재빌드 8초.** 이 격차가 Yocto 운영의 핵심이고,
+`DL_DIR`·`SSTATE_DIR`을 빌드 디렉터리 밖에 두라는 이유다. 팀이나 CI가 이 둘을
+공유하면 새 워크스페이스에서도 처음부터 굽지 않는다 — exp02에서 잰
+Bazel 원격 캐시와 정확히 같은 이야기다(그쪽은 28.9배, 이쪽은 자릿수가 더 크다).
+
+반대로 말하면 **sstate 를 날리면 다시 몇 시간이다.** CI에서 워크스페이스를
+깨끗이 지우는 습관이 Yocto 에서는 치명적인 비용이 된다.
 
 ## 알아둘 것
 
@@ -103,9 +136,15 @@ bitbake -c populate_sdk core-image-minimal
 
 ## 결과
 
-**진행 중 (2026-08-19 시작)** — `core-image-minimal` 첫 빌드 실행 중.
+**기준 1·4 통과, 2·3 진행 중 (2026-08-21)**
 
-곁가지로, bitbake가 WSLv2를 감지하고 경고를 냈다:
-`You are running bitbake under WSLv2 ... you should optimize your VHDX file
-eventually to avoid running out of storage space`.
-빌드 산출물이 VHDX를 부풀리고, 파일을 지워도 VHDX는 자동으로 줄지 않는다.
+| 기준 | 상태 |
+|---|---|
+| 1. `runqemu`로 부팅되고 셸이 뜬다 | ✅ 로그인 프롬프트 도달 |
+| 2. 이미지 안에서 내 바이너리가 `arch=aarch64`를 출력 | ⏳ 레시피 작성 필요 |
+| 3. `populate_sdk` 로 뽑은 sysroot 로 크로스 빌드 | ⏳ SDK 빌드 중 |
+| 4. sstate 있는 재빌드 시간 비교 | ✅ **8초** |
+
+기준 3이 [exp03 B](../exp03_cross_aarch64/README.md)의 해결 경로다 —
+배포판 크로스 패키지는 링커 스크립트가 `/` 기준 절대 경로를 담고 있어
+sysroot 로 쓰면 깨졌다. Yocto SDK 는 재배치 가능하게 설계돼 있어 그 문제가 없다.

@@ -61,7 +61,7 @@ bash scripts/bootstrap_ubuntu.sh   # bazelisk, qemu, 빌드 도구 설치
 | [03](experiments/exp03_cross_aarch64/) | `cross_aarch64` | 같은 소스를 `--platforms`만 바꿔 aarch64로 빌드할 수 있는가 | 🟡 **부분 통과** (시스템 툴체인 O, hermetic 미완) |
 | [04](experiments/exp04_qemu_device/) | `qemu_device` | 크로스 빌드한 바이너리를 QEMU 타깃에서 실행하고 결과를 수집할 수 있는가 | 미실행 |
 | [05](experiments/exp05_test_impact/) | `test_impact` | `bazel query`로 "이 커밋이 영향을 주는 테스트만" 골라낼 수 있는가 | ✅ **통과** (2026-08-18) |
-| [06](experiments/exp06_yocto_qemuarm64/) | `yocto_qemuarm64` | Yocto로 타깃 이미지를 빌드하고 그 위에서 내 바이너리를 돌릴 수 있는가 | 미실행 |
+| [06](experiments/exp06_yocto_qemuarm64/) | `yocto_qemuarm64` | Yocto로 타깃 이미지를 빌드하고 그 위에서 내 바이너리를 돌릴 수 있는가 | 🟡 **부분 통과** (부팅 O, sstate 재빌드 8초 / SDK 진행 중) |
 | [07](experiments/exp07_ci_pipeline/) | `ci_pipeline` | 위 전부를 GitLab CI 파이프라인 하나로 엮고, 계층별 소요 시간을 측정할 수 있는가 | 미실행 |
 
 결과 갱신:
